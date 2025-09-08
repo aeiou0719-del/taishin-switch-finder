@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>台新 未來卡｜刷卡回饋方案搜尋器</title>
+<style>
+  :root{
+    --bg:#0f1220; --card:#151a2e; --muted:#8fa0c2; --text:#e8eeff; --accent:#6aa6ff; --ok:#36d399; --warn:#ffd166;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",PingFang TC,Roboto,"Noto Sans CJK TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text)}
+  header{padding:24px 16px 8px;max-width:980px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:24px;letter-spacing:.5px}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  .wrap{max-width:980px;margin:12px auto 40px;padding:0 16px}
+  .card{background:var(--card);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  input[type="text"]{flex:1;min-width:260px;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0c1022;color:var(--text);font-size:16px;outline:none}
+  input[type="text"]::placeholder{color:#7281a8}
+  .btn{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0c1022;color:#e8eeff;cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  label.chk{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+  .hint{color:var(--muted);font-size:13px;margin-top:8px}
+  .results{margin-top:16px;display:grid;gap:10px}
+  .result{padding:14px;border-radius:12px;background:#0f1530;border:1px solid rgba(255,255,255,.08)}
+  .plan{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(106,166,255,.15);border:1px solid rgba(106,166,255,.35);color:#cfe0ff;font-size:12px;margin-right:8px}
+  .score{font-size:12px;color:#9fb5e6}
+  .why{margin:8px 0 0;color:#cad6ff;font-size:14px;line-height:1.6}
+  .badge{display:inline-block;border:1px solid rgba(255,255,255,.18);padding:2px 8px;border-radius:999px;font-size:12px;color:#cbd6ff;margin:2px 6px 0 0}
+  .muted{color:var(--muted)}
+  .src{margin-top:14px;font-size:12px;color:#aebde6}
+  .src a{color:#cfe0ff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:720px){.grid2{grid-template-columns:1fr}}
+  details{border:1px dashed rgba(255,255,255,.12);border-radius:10px;padding:10px;margin-top:14px}
+  summary{cursor:pointer;color:#c7d7ff}
+  code{white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+<header>
+  <h1>台新 未來卡｜刷卡回饋方案搜尋器</h1>
+  <p>輸入關鍵詞或店名（例：7-11、全家、IKEA、Uber、加油、KKday、LaLaport…）→ 建議切換方案與依據。</p>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <input id="q" type="text" placeholder="輸入關鍵詞或店名…（支援常見同義寫法）" />
+      <button class="btn" id="go">搜尋</button>
+      <label class="chk"><input type="checkbox" id="holiday" />是假日/國定假日嗎？（同時提示「假日刷 2%」）</label>
+    </div>
+    <div class="hint">資料依據：台新銀行官方「未來卡七大切換刷平台」。實際回饋請以官網公告與刷卡當下條件為準；MCC 認定以發卡機構/收單行為準。</div>
+    <div id="results" class="results"></div>
+    <div class="src">官方參考：<a href="https://www.taishinbank.com.tw/TSB/personal/credit/intro/overview/future/f7b68cfa-549d-11f0-b432-0050568c09e3" target="_blank" rel="noopener">台新銀行｜未來卡七大切換刷平台</a></div>
+
+    <details>
+      <summary>如何自訂／擴充名單（點開看說明）</summary>
+      <p class="muted">下方 <code>DATA</code> 與 <code>SYNONYMS</code> 物件即可編修：新增店名、別名、分類。儲存檔案後重新整理即可生效。</p>
+    </details>
+  </div>
+</div>
+
+<script>
+/** ========= 資料區（依台新官方分組；最後更新：2025-09-08） =========
+ *  說明：每個條目 { name: '店名', plan: '方案', group: '子分類', note?: '補充', tags?:[] }
+ */
+const DATA = [
+  // 1. Pay著刷（台新Pay綁定）
+  {name:'台新Pay場域', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付', note:'含台灣Pay場域、新光三越、四大超商、IKEA、路易莎、台灣大車隊等（以官網公告為準）', tags:['台新Pay']},
+  {name:'新光三越', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付', tags:['百貨','台新Pay']},
+  {name:'IKEA', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付', tags:['居家','台新Pay']},
+  {name:'路易莎咖啡', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付', tags:['餐飲','台新Pay']},
+  {name:'台灣大車隊', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付', tags:['計程車','交通','台新Pay']},
+
+  // 2. 天天刷
+  // 超商量販
+  {name:'7-11', plan:'天天刷 3.8%', group:'超商量販', note:'兩大超商限用台新Pay綁定支付', tags:['超商']},
+  {name:'全家便利商店', plan:'天天刷 3.8%', group:'超商量販', note:'兩大超商限用台新Pay綁定支付', tags:['超商']},
+  {name:'家樂福', plan:'天天刷 3.8%', group:'超商量販', tags:['量販']},
+  {name:'大買家', plan:'天天刷 3.8%', group:'超商量販', tags:['量販']},
+  // 通勤交通
+  {name:'台鐵', plan:'天天刷 3.8%', group:'通勤交通', tags:['交通']},
+  {name:'高鐵', plan:'天天刷 3.8%', group:'通勤交通', tags:['交通']},
+  {name:'LINE GO', plan:'天天刷 3.8%', group:'通勤交通', tags:['計程車','交通']},
+  {name:'Yoxi', plan:'天天刷 3.8%', group:'通勤交通', tags:['計程車','交通']},
+  {name:'Uber', plan:'天天刷 3.8%', group:'通勤交通', tags:['計程車','交通']},
+  // 停車租車
+  {name:'嘟嘟房', plan:'天天刷 3.8%', group:'停車租車', tags:['停車']},
+  {name:'Autopass(車麻吉)', plan:'天天刷 3.8%', group:'停車租車', tags:['停車']},
+  {name:'城市車旅', plan:'天天刷 3.8%', group:'停車租車', tags:['停車']},
+  {name:'ViViPark', plan:'天天刷 3.8%', group:'停車租車', tags:['停車']},
+  {name:'USPACE', plan:'天天刷 3.8%', group:'停車租車', tags:['停車']},
+  {name:'UDRIVE', plan:'天天刷 3.8%', group:'停車租車', tags:['停車']},
+  {name:'iRent', plan:'天天刷 3.8%', group:'停車租車', tags:['共享汽機車']},
+  {name:'和運租車', plan:'天天刷 3.8%', group:'停車租車', tags:['租車']},
+  {name:'格上租車', plan:'天天刷 3.8%', group:'停車租車', tags:['租車']},
+
+  // 3. 大筆刷
+  // 指定百貨
+  {name:'遠東SOGO', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'廣三SOGO', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'遠東百貨', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'微風', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'台北101', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'遠東巨城', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'南紡購物中心', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'漢神百貨', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'漢神巨蛋', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'誠品生活', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  {name:'Mitsui Shopping Park LaLaport(南港/台中)', plan:'大筆刷 3.3%', group:'指定百貨', tags:['百貨']},
+  // 指定Outlet
+  {name:'MITSUI OUTLET PARK', plan:'大筆刷 3.3%', group:'指定Outlet', tags:['Outlet']},
+  {name:'華泰名品城', plan:'大筆刷 3.3%', group:'指定Outlet', tags:['Outlet']},
+  {name:'SKM Park Outlets', plan:'大筆刷 3.3%', group:'指定Outlet', tags:['Outlet']},
+  // 居家裝修
+  {name:'IKEA', plan:'大筆刷 3.3%', group:'居家裝修', tags:['居家']},
+  {name:'特力屋', plan:'大筆刷 3.3%', group:'居家裝修', tags:['居家']},
+  {name:'HOLA', plan:'大筆刷 3.3%', group:'居家裝修', tags:['居家']},
+  {name:'宜得利', plan:'大筆刷 3.3%', group:'居家裝修', tags:['居家']},
+  {name:'瑪黑家居', plan:'大筆刷 3.3%', group:'居家裝修', tags:['居家']},
+
+  // 4. 好饗刷
+  {name:'全臺餐飲', plan:'好饗刷 3.3%', group:'全臺餐飲(符合餐飲MCC)', note:'不含餐券，實際以MCC為準', tags:['餐飲','MCC']},
+  {name:'Uber Eats', plan:'好饗刷 3.3%', group:'外送平台', tags:['外送']},
+  {name:'Foodpanda', plan:'好饗刷 3.3%', group:'外送平台', tags:['外送']},
+  {name:'拓元售票', plan:'好饗刷 3.3%', group:'展演購票', tags:['售票']},
+  {name:'KKTIX', plan:'好饗刷 3.3%', group:'展演購票', tags:['售票']},
+  {name:'年代售票', plan:'好饗刷 3.3%', group:'展演購票', tags:['售票']},
+  {name:'寬宏售票', plan:'好饗刷 3.3%', group:'展演購票', tags:['售票']},
+  {name:'OPENTIX 兩廳院', plan:'好饗刷 3.3%', group:'展演購票', tags:['售票']},
+  // 指定飯店（節錄主要字樣）
+  {name:'晶華國際酒店集團', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'台灣萬豪國際集團', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'煙波飯店', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'老爺酒店', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'福華飯店', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'漢來飯店', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'台北君悅', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'高雄洲際', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'礁溪寒沐', plan:'好饗刷 3.3%', group:'指定飯店'},
+  // 指定樂園
+  {name:'義大遊樂世界', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'麗寶樂園', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'六福村', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'九族文化村', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'劍湖山世界', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'X-Park', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'國立海洋生物博物館', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'遠雄海洋公園', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'大魯閣', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'小人國', plan:'好饗刷 3.3%', group:'指定樂園'},
+  // 加油充電
+  {name:'中油直營', plan:'好饗刷 3.3%', group:'加油充電', tags:['加油']},
+  {name:'台亞直營', plan:'好饗刷 3.3%', group:'加油充電', tags:['加油']},
+  {name:'全國加油', plan:'好饗刷 3.3%', group:'加油充電', tags:['加油']},
+  {name:'源點 EVOASIS', plan:'好饗刷 3.3%', group:'加油充電', tags:['充電']},
+  {name:'華城電能 EVALUE', plan:'好饗刷 3.3%', group:'加油充電', tags:['充電']},
+
+  // 5. 數趣刷
+  {name:'蝦皮', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'momo', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'Coupang', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'PChome', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'Yahoo', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'Amazon', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'東森', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'博客來', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'Richart Mart', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'Hahow', plan:'數趣刷 3.3%', group:'線上課程'},
+  {name:'PressPlay', plan:'數趣刷 3.3%', group:'線上課程'},
+  {name:'Amazing Talker', plan:'數趣刷 3.3%', group:'線上課程'},
+  {name:'Udemy', plan:'數趣刷 3.3%', group:'線上課程'},
+  {name:'Kobo', plan:'數趣刷 3.3%', group:'線上課程/電子書'},
+  {name:'Readmoo', plan:'數趣刷 3.3%', group:'線上課程/電子書'},
+  {name:'UNIQLO', plan:'數趣刷 3.3%', group:'時尚品味'},
+  {name:'GU', plan:'數趣刷 3.3%', group:'時尚品味'},
+  {name:'ZARA', plan:'數趣刷 3.3%', group:'時尚品味'},
+  {name:'NET', plan:'數趣刷 3.3%', group:'時尚品味'},
+  {name:'lativ', plan:'數趣刷 3.3%', group:'時尚品味'},
+  {name:'GAP', plan:'數趣刷 3.3%', group:'時尚品味'},
+
+  // 6. 玩旅刷
+  {name:'海外消費', plan:'玩旅刷 3.3%', group:'外幣/境外', note:'交易幣別為外幣或交易國別非臺灣'},
+  {name:'華航', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'長榮', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'星宇', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'虎航', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'國泰航空', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'華信', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'立榮', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'Klook', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'KKday', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'AIRSIM', plan:'玩旅刷 3.3%', group:'訂房旅行/通信'},
+  {name:'Agoda', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'Booking.com', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'Trip.com', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'Airbnb', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'Hotels.com', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'Expedia', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'雄獅旅遊', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'易遊網', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+  {name:'東南旅遊', plan:'玩旅刷 3.3%', group:'訂房旅行'},
+
+  // 7. 假日刷
+  {name:'假日通用', plan:'假日刷 2%', group:'節假日不限通路', note:'國內國定例假日消費（含保費）'}
+];
+
+// 常見同義詞／別名／大小寫變體
+const SYNONYMS = {
+  '7-11':['7/11','7１１','7 11','7ELEVEN','7-ELEVEN','統一超商','小七','7１１'],
+  '全家便利商店':['全家','FamilyMart','family mart','family-mart','fami'],
+  'LINE GO':['LINE TAXI','Line Taxi','Line Go','LINEGO','LINE GO'],
+  'Uber':['uber'],
+  'Uber Eats':['ubereats','UberEATS','Ubereats','Uber eats'],
+  'Foodpanda':['food panda','food-panda','foodpanda'],
+  'MITSUI OUTLET PARK':['三井outlet','三井 OUTLET','三井Outlet','Mitsui Outlet Park'],
+  '遠東SOGO':['SOGO'],
+  '台北101':['101購物中心','Taipei 101'],
+  'X-Park':['X Park','xpark','Xpark'],
+  'KKTIX':['KKtix','kkTIX'],
+  'OPENTIX 兩廳院':['OPENTIX','兩廳院'],
+  'IKEA':['宜家家居'],
+  'Agoda':['安可達'], 'Booking.com':['Booking'], 'Trip.com':['Ctrip','攜程'],
+  'Hotels.com':['Hotels'], 'Expedia':['智遊網'],
+  'LaLaport':['Mitsui Shopping Park LaLaport(南港/台中)','LaLaport 台中','LaLaport 南港'],
+  '台灣大車隊':['55688','55688 台灣大車隊'],
+  '中油直營':['台灣中油','中油'], '全國加油':['全國加油站'], '台亞直營':['台亞加油站']
+};
+
+// === 正規化 ===
+function normalize(str){
+  return (str||'').toLowerCase()
+    .replace(/[－—–—]/g,'-')
+    .replace(/[／⁄/]/g,'/')
+    .replace(/[（）\(\)]/g,'')
+    .replace(/\s+/g,'')
+    .trim();
+}
+
+// 建立查詢索引（含同義詞）
+const INDEX = [];
+for(const item of DATA){
+  const base = { ...item, key: normalize(item.name) };
+  INDEX.push(base);
+  // 同義詞掛接
+  const syns = SYNONYMS[item.name] || [];
+  for(const s of syns){
+    INDEX.push({...item, name: item.name, alias:s, key: normalize(s)});
+  }
+}
+
+// 搜尋得分：精確=100；同義詞=95；前綴=85；包含=75；關鍵類詞=65
+const KEY_HINTS = [
+  {kw:['餐廳','餐飲','吃飯','美食'], map:{plan:'好饗刷 3.3%', group:'全臺餐飲(符合餐飲MCC)', why:'關鍵詞指向「餐飲MCC」。實際以收單行/發卡機構MCC認定為準。', score:65}},
+  {kw:['加油','充電','evoasis','evalue'], map:{plan:'好饗刷 3.3%', group:'加油充電', score:65}},
+  {kw:['停車','停車場','vivi','uspace','udrive','autopass','嘟嘟房'], map:{plan:'天天刷 3.8%', group:'停車租車', score:65}},
+  {kw:['機票','航空','航空公司','飛機'], map:{plan:'玩旅刷 3.3%', group:'航空公司', score:65}},
+  {kw:['訂房','旅館','旅遊','旅行','agoda','booking','trip','airbnb','expedia','kkday','klook'], map:{plan:'玩旅刷 3.3%', group:'訂房旅行', score:65}},
+  {kw:['百貨','outlet','outlets'], map:{plan:'大筆刷 3.3%', group:'百貨/Outlet', score:65}},
+  {kw:['超商','便利商店','量販','家樂福','大買家'], map:{plan:'天天刷 3.8%', group:'超商量販', score:65}},
+  {kw:['計程車','叫車','uber','linego','yoxi','大車隊','55688'], map:{plan:'天天刷 3.8%', group:'通勤交通', score:65}},
+  {kw:['外送','ubereats','foodpanda','熊貓'], map:{plan:'好饗刷 3.3%', group:'外送平台', score:65}}
+];
+
+function search(q, isHoliday){
+  const n = normalize(q);
+  const seen = new Set();
+  const out = [];
+
+  if(!n){
+    return out;
+  }
+
+  for(const it of INDEX){
+    const key = it.key;
+    let score = 0, why = '';
+
+    if(n === key){ score = 100; why = `精確命中「${it.alias? it.alias : it.name}」`; }
+    else if(key.startsWith(n) || n.startsWith(key)){ score = 85; why = `前綴近似：${it.name}`; }
+    else if(key.includes(n) || n.includes(key)){ score = 75; why = `部分字詞相符：${it.name}`; }
+
+    // 同義詞加分
+    if(score>0 && it.alias){ score = Math.max(score,95); why = `同義詞/別名命中「${it.alias}」→ 對應 ${it.name}`; }
+
+    if(score>0){
+      const sig = it.name + '|' + it.plan + '|' + it.group;
+      if(!seen.has(sig)){
+        seen.add(sig);
+        out.push({name: it.name, plan: it.plan, group: it.group, score, why, note: it.note, tags: it.tags||[]});
+      }
+    }
+  }
+
+  // 依關鍵詞判斷的「推測分類」
+  for(const rule of KEY_HINTS){
+    if(rule.kw.some(k=> n.includes(normalize(k)) )){
+      out.push({name:q, plan:rule.map.plan, group:rule.map.group, score:rule.map.score, why: rule.map.why || '關鍵詞推測分類', note:rule.map.note});
+    }
+  }
+
+  // 假日備選
+  if(isHoliday){
+    out.push({name:q, plan:'假日刷 2%', group:'節假日不限通路', score:50, why:'你勾選了「是假日」；任何通路皆可適用（含保費），作為備選方案。'});
+  }
+
+  // 分數排序、同方案合併排序（高→低）
+  out.sort((a,b)=> b.score - a.score || a.plan.localeCompare(b.plan));
+  return out;
+}
+
+function render(list){
+  const box = document.getElementById('results');
+  box.innerHTML = '';
+  if(list.length===0){
+    box.innerHTML = '<div class="result"><span class="muted">沒有找到直覺的對應。試試輸入：店名（如「IKEA」）、情境（如「加油」、「訂房」）。</span></div>';
+    return;
+  }
+  for(const r of list){
+    const el = document.createElement('div');
+    el.className = 'result';
+    el.innerHTML = `
+      <div><span class="plan">${r.plan}</span><span class="score">置信分數：${r.score}</span></div>
+      <div class="why">理由：${r.why || ''}；歸類為「${r.group}」。${r.note? '（'+r.note+'）' : ''}</div>
+      <div class="badge">關鍵：${r.name}</div>
+      ${(r.tags && r.tags.length)? r.tags.map(t=>`<span class="badge">${t}</span>`).join(''):''}
+    `;
+    box.appendChild(el);
+  }
+}
+
+const $q = document.getElementById('q');
+document.getElementById('go').addEventListener('click', ()=> render(search($q.value, document.getElementById('holiday').checked)));
+$q.addEventListener('keydown', e=>{ if(e.key==='Enter'){ render(search($q.value, document.getElementById('holiday').checked)); }});
+</script>
+</body>
+</html>
