@@ -78,7 +78,9 @@
 </div>
 
 <script>
-/** === 核心資料 === */
+/* -----------------------------
+   資料表（品牌 + 泛類別占位）
+----------------------------- */
 const DATA = [
   // 方案一：Pay著刷
   {name:'台新Pay場域', plan:'Pay著刷 3.8%', group:'台新/台灣Pay綁定支付'},
@@ -87,12 +89,16 @@ const DATA = [
   {name:'IKEA', plan:'Pay著刷 3.8%', group:'台新/台灣Pay綁定支付'},
   {name:'路易莎咖啡', plan:'Pay著刷 3.8%', group:'台新/台灣Pay綁定支付'},
   {name:'台灣大車隊', plan:'Pay著刷 3.8%', group:'台新/台灣Pay綁定支付'},
+  // 四大超商（Pay著刷）
   {name:'7-11', plan:'Pay著刷 3.8%', group:'四大超商'},
   {name:'全家便利商店', plan:'Pay著刷 3.8%', group:'四大超商'},
   {name:'OK超商', plan:'Pay著刷 3.8%', group:'四大超商'},
   {name:'萊爾富', plan:'Pay著刷 3.8%', group:'四大超商'},
 
-  // 方案二：天天刷
+  // 方案二：天天刷（品牌 + 泛類別）
+  {name:'超商量販', plan:'天天刷 3.3%', group:'超商量販'},
+  {name:'通勤交通', plan:'天天刷 3.3%', group:'通勤交通'},
+  {name:'停車租車', plan:'天天刷 3.3%', group:'停車租車'},
   {name:'7-11', plan:'天天刷 3.3%', group:'超商量販'},
   {name:'全家便利商店', plan:'天天刷 3.3%', group:'超商量販'},
   {name:'家樂福', plan:'天天刷 3.3%', group:'超商量販'},
@@ -113,6 +119,9 @@ const DATA = [
   {name:'格上租車', plan:'天天刷 3.3%', group:'停車租車'},
 
   // 方案三：大筆刷
+  {name:'指定百貨', plan:'大筆刷 3.3%', group:'指定百貨'},
+  {name:'指定Outlet', plan:'大筆刷 3.3%', group:'指定Outlet'},
+  {name:'居家裝修', plan:'大筆刷 3.3%', group:'居家裝修'},
   {name:'新光三越', plan:'大筆刷 3.3%', group:'指定百貨'},
   {name:'遠東SOGO', plan:'大筆刷 3.3%', group:'指定百貨'},
   {name:'廣三SOGO', plan:'大筆刷 3.3%', group:'指定百貨'},
@@ -134,8 +143,14 @@ const DATA = [
   {name:'宜得利', plan:'大筆刷 3.3%', group:'居家裝修'},
   {name:'瑪黑家居', plan:'大筆刷 3.3%', group:'居家裝修'},
 
-  // 方案四：好饗刷
-  {name:'全臺餐飲', plan:'好饗刷 3.3%', group:'餐飲'},
+  // 方案四：好饗刷（泛類別 + 品牌）
+  {name:'全臺餐飲', plan:'好饗刷 3.3%', group:'全臺餐飲（不含餐券）'},
+  {name:'外送平台', plan:'好饗刷 3.3%', group:'外送平台'},
+  {name:'展演購票', plan:'好饗刷 3.3%', group:'展演購票'},
+  {name:'指定飯店', plan:'好饗刷 3.3%', group:'指定飯店'},
+  {name:'指定樂園', plan:'好饗刷 3.3%', group:'指定樂園'},
+  {name:'加油充電', plan:'好饗刷 3.3%', group:'加油充電'},
+
   {name:'Uber Eats', plan:'好饗刷 3.3%', group:'外送平台'},
   {name:'Foodpanda', plan:'好饗刷 3.3%', group:'外送平台'},
   {name:'拓元售票', plan:'好饗刷 3.3%', group:'展演購票'},
@@ -168,7 +183,10 @@ const DATA = [
   {name:'EVOASIS', plan:'好饗刷 3.3%', group:'加油充電'},
   {name:'EVALUE', plan:'好饗刷 3.3%', group:'加油充電'},
 
-  // 方案五：數趣刷
+  // 方案五：數趣刷（泛類別 + 品牌）
+  {name:'網購平台', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'線上課程', plan:'數趣刷 3.3%', group:'線上課程'},
+  {name:'時尚品味', plan:'數趣刷 3.3%', group:'時尚品味'},
   {name:'蝦皮', plan:'數趣刷 3.3%', group:'網購平台'},
   {name:'momo', plan:'數趣刷 3.3%', group:'網購平台'},
   {name:'Coupang', plan:'數趣刷 3.3%', group:'網購平台'},
@@ -193,6 +211,8 @@ const DATA = [
 
   // 方案六：玩旅刷
   {name:'海外消費', plan:'玩旅刷 3.3%', group:'海外消費'},
+  {name:'航空公司', plan:'玩旅刷 3.3%', group:'航空公司'},
+  {name:'訂房旅行', plan:'玩旅刷 3.3%', group:'訂房旅行'},
   {name:'華航', plan:'玩旅刷 3.3%', group:'航空公司'},
   {name:'長榮', plan:'玩旅刷 3.3%', group:'航空公司'},
   {name:'星宇', plan:'玩旅刷 3.3%', group:'航空公司'},
@@ -217,7 +237,9 @@ const DATA = [
   {name:'假日不限通路', plan:'假日刷 2%', group:'國定例假日消費'}
 ];
 
-/** === 同義詞 === */
+/* -----------------------------
+   同義詞（口語／泛關鍵字）
+----------------------------- */
 const SYNONYMS = {
   '7-11':['7/11','7ELEVEN','7-ELEVEN','小七','7 11'],
   '全家便利商店':['全家','FamilyMart','Family Mart','Fami'],
@@ -231,23 +253,38 @@ const SYNONYMS = {
   '華泰名品城':['Gloria Outlet','Gloria Outlets'],
   'SKM Park Outlets':['SKM Park','SKM Outlets'],
 
-  '全臺餐飲':['餐廳','吃飯','聚餐','美食','餐飲','小吃'],
-  '外送平台':['外送','叫外送','ubereats','foodpanda','外送平台'],
-  '展演購票':['展演','演唱會','演出','兩廳院','表演','票券','購票'],
-  '指定飯店':['飯店','旅館','酒店','住宿','resort'],
-  '指定樂園':['樂園','遊樂園','主題樂園','水族館','海生館','x-park','親子樂園'],
-  '加油充電':['加油','加油站','充電','充電站','EV充電'],
+  // 天天刷：泛類別
+  '超商量販':['超商','便利商店','量販','超市','賣場'],
+  '通勤交通':['交通','搭車','叫車','計程車','Uber叫車','搭高鐵','搭台鐵','機場接送'],
+  '停車租車':['停車','停車場','路邊停車','共享汽車','自助租車','租車','iRent租車','和運租車','格上租車'],
 
+  // 大筆刷：泛類別
+  '指定百貨':['百貨','購物中心','商場','百貨公司','美食街'],
+  '指定Outlet':['Outlet','outlet','奧特萊斯','名品城','折扣村','三井Outlet','華泰Outlet'],
+  '居家裝修':['居家','裝修','家居','家具','家飾','居家佈置','DIY','收納'],
+
+  // 好饗刷：泛類別
+  '全臺餐飲':['餐廳','吃飯','聚餐','美食','小吃','餐飲'],
+  '外送平台':['外送','叫外送','ubereats','foodpanda','外送平台'],
+  '展演購票':['展演','演唱會','演出','兩廳院','表演','票券','購票','活動票'],
+  '指定飯店':['飯店','旅館','酒店','住宿','resort','溫泉飯店','度假飯店'],
+  '指定樂園':['樂園','遊樂園','主題樂園','水族館','海生館','x-park','親子樂園'],
+  '加油充電':['加油','加油站','充電','充電站','EV充電','EVOASIS','EVALUE','中油','全國加油','台亞'],
+
+  // 數趣刷：泛類別
   '網購平台':['網購','電商','購物網站','商城','線上購物'],
   '線上課程':['課程','線上課程','學習','教學','Hahow','PressPlay','Udemy','AmazingTalker'],
   '時尚品味':['時尚','服飾','衣服','衣著','潮流','穿搭','快時尚'],
 
+  // 玩旅刷：泛類別
   '海外消費':['境外','外幣','海外','國外刷卡','海外網購'],
   '航空公司':['航空','機票','買機票','飛機','航班'],
   '訂房旅行':['訂房','旅遊','旅行','旅宿','住宿預訂','自由行','klook','kkday']
 };
 
-/** === 輔助函數 === */
+/* -----------------------------
+   正規化
+----------------------------- */
 function normalize(s){
   return (s||'').toLowerCase()
     .replace(/[－—–]/g,'-')
@@ -256,39 +293,98 @@ function normalize(s){
     .trim();
 }
 
-/** === 搜尋 === */
-function search(q){
-  const holiday = document.getElementById('holiday').checked;
-  const resBox = document.getElementById('results');
-  resBox.innerHTML = '';
-  if(!q) return;
-  const key = normalize(q);
-  let found=[];
-
-  DATA.forEach(item=>{
-    let names=[normalize(item.name)];
-    if(SYNONYMS[item.name]) names=names.concat(SYNONYMS[item.name].map(normalize));
-    if(names.includes(key)) found.push(item);
-  });
-
-  // 假日補救：若沒找到 or 屬於不回饋商家 → 推薦假日刷
-  if(holiday){
-    if(found.length===0 || found.every(x=>x.plan!=='假日刷 2%')){
-      found.push({name:q,plan:'假日刷 2%',group:'國定例假日消費'});
-    }
+/* -----------------------------
+   建索引：主名 + 同義詞
+----------------------------- */
+const INDEX = [];
+for(const item of DATA){
+  INDEX.push({key:normalize(item.name), item, kind:'name', alias:null});
+  const syn = SYNONYMS[item.name] || [];
+  for(const a of syn){
+    INDEX.push({key:normalize(a), item, kind:'syn', alias:a});
   }
-
-  found.forEach(f=>{
-    const div=document.createElement('div');
-    div.className='result';
-    div.innerHTML=`<span class="plan">${f.plan}</span> <span class="score">${f.group}</span><br>
-      <div class="why">關鍵：${f.name}</div>`;
-    resBox.appendChild(div);
-  });
 }
 
-document.getElementById('go').onclick=()=>search(document.getElementById('q').value);
-document.getElementById('q').addEventListener('keypress',e=>{if(e.key==='Enter')search(e.target.value);});
+/* -----------------------------
+   搜尋（含得分規則）
+   精確=100；同義詞=95；前綴=85；包含=75；關鍵類詞=65
+----------------------------- */
+function scoreMatch(qKey, row){
+  const t = row.key;
+  if(qKey === t) return {score: row.kind==='name'?100:95, reason: row.kind==='name' ? '精確命中' : `同義詞命中（${row.alias}）`};
+  if(t.startsWith(qKey) || qKey.startsWith(t)) return {score:85, reason:'前綴接近'};
+  if(t.includes(qKey) || qKey.includes(t)) return {score:75, reason:'部分相符'};
+  return null;
+}
+
+function searchAndRank(q, isHoliday){
+  const qKey = normalize(q);
+  const seen = new Set();
+  const out = [];
+
+  for(const row of INDEX){
+    const s = scoreMatch(qKey, row);
+    if(!s) continue;
+
+    // Pay著刷小加權，讓 3.8%更靠前
+    let sc = s.score + (row.item.plan.includes('Pay著刷') ? 6 : 0);
+    const sig = row.item.name + '|' + row.item.plan + '|' + row.item.group;
+    if(seen.has(sig)) continue;
+    seen.add(sig);
+
+    out.push({
+      name: row.item.name,
+      plan: row.item.plan,
+      group: row.item.group,
+      score: sc,
+      reason: s.reason + (row.kind==='syn' && row.alias ? `：${row.alias}`:'')
+    });
+  }
+
+  // 假日補救：沒找到就推「假日刷 2%」
+  if(isHoliday && out.length===0){
+    out.push({name:q, plan:'假日刷 2%', group:'國定例假日消費', score:65, reason:'假日不限通路'});
+  }
+
+  // 排序：分數 → Pay著刷優先 → 名稱
+  out.sort((a,b)=> b.score - a.score || (b.plan.includes('Pay著刷') - a.plan.includes('Pay著刷')) || a.name.localeCompare(b.name));
+  return out;
+}
+
+/* -----------------------------
+   Render
+----------------------------- */
+function render(list){
+  const box=document.getElementById('results');
+  box.innerHTML='';
+  if(list.length===0){
+    box.innerHTML='<div class="result"><span class="muted">沒有找到；可試試店名（IKEA）、情境（加油/訂房/外送/停車/電商/課程）。</span></div>';
+    return;
+  }
+  for(const r of list){
+    const el=document.createElement('div');
+    el.className='result';
+    el.innerHTML =
+      `<div><span class="plan ${/不回饋/.test(r.plan)?'nobonus':''}">${r.plan}</span>
+         <span class="score">置信分數：${r.score}</span></div>
+       <div class="why">理由：${r.reason}；歸類為「${r.group}」。</div>
+       <div class="badge">關鍵：${r.name}</div>`;
+    box.appendChild(el);
+  }
+}
+
+/* -----------------------------
+   綁定
+----------------------------- */
+const $q = document.getElementById('q');
+document.getElementById('go').addEventListener('click', ()=> {
+  render(searchAndRank($q.value, document.getElementById('holiday').checked));
+});
+$q.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    render(searchAndRank($q.value, document.getElementById('holiday').checked));
+  }
+});
 </script>
 </body>
 </html>
