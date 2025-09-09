@@ -8,7 +8,7 @@
 <style>
   :root{ --bg:#0f1220; --card:#151a2e; --muted:#8fa0c2; --text:#e8eeff; --accent:#6aa6ff; }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",PingFang TC,Roboto,"Noto Sans CJK TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text)}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",PingFang TC,Roboto,"Noto Sans CJK TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text);padding-bottom:200px;}
   header{padding:24px 16px 8px;max-width:980px;margin:0 auto}
   header h1{margin:0 0 6px;font-size:24px;letter-spacing:.5px}
   header p{margin:0;color:var(--muted);font-size:14px}
@@ -31,6 +31,11 @@
   .muted{color:var(--muted)}
   .src{margin-top:14px;font-size:12px;color:#aebde6}
   .src a{color:#cfe0ff}
+  /* 固定心法卡片 */
+  .tips{position:fixed;bottom:0;left:0;right:0;background:#1b213b;border-top:1px solid rgba(255,255,255,.12);padding:14px 20px;font-size:14px;line-height:1.7;z-index:999}
+  .tips h2{margin:0 0 6px;font-size:15px;color:#cfe0ff}
+  .tips ol{margin:0;padding-left:20px}
+  .tips li{margin:4px 0;color:#dce6ff}
 </style>
 </head>
 <body>
@@ -46,117 +51,98 @@
       <button class="btn" id="go">搜尋</button>
       <label class="chk"><input type="checkbox" id="holiday" /> 是假日/國定假日嗎？（同時提示「假日刷 2%」。）</label>
     </div>
-    <div class="hint">資料依據：台新銀行官方「七大刷任你切最高3.8%回饋」。實際回饋請以官網公告與刷卡當下條件為準；MCC 認定以發卡機構/收單行為準。</div>
-
+    <div class="hint">
+      資料依據：台新銀行官方「七大刷任你切最高3.8%回饋」。實際回饋請以官網公告與刷卡當下條件為準；MCC 認定以發卡機構/收單行為準。
+    </div>
     <div id="results" class="results"></div>
     <div class="src">官方參考：<a href="https://www.taishinbank.com.tw/TSB/personal/credit/intro/overview/future/f7b68cfa-549d-11f0-b432-0050568c09e3" target="_blank" rel="noopener">台新銀行｜七大刷任你切回饋網頁</a></div>
   </div>
 </div>
 
+<!-- 底部固定 心法卡片 -->
+<div class="tips">
+  <h2>方案切換心法</h2>
+  <ol>
+    <li>優先確認商家是否支援 <b>台新Pay/台灣Pay</b> → 若有，直接用「<b>Pay著刷 3.8%</b>」。</li>
+    <li>餐廳大多數屬於「<b>好饗刷 3.3%</b>」，但百貨美食街要注意：若簽單顯示百貨名稱，就要切換「<b>大筆刷 3.3%</b>」。</li>
+    <li>假日消費時，如文創市集、市場攤位等平日不回饋的通路，可用「<b>假日刷 2%</b>」。</li>
+    <li>每日消費後，可到 Richart Life App 查看「即時消費」，依顯示的商家類別判斷是否需要切換，並於 <b>午夜23:59前</b> 完成切換。</li>
+  </ol>
+</div>
+
 <script>
 /** ========= 資料區 ========= */
 const DATA = [
-  // 1. Pay著刷 3.8%
-  {name:'台新Pay場域', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付'},
-  {name:'新光三越', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付'},
-  {name:'IKEA', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付'},
-  {name:'路易莎咖啡', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付'},
-  {name:'台灣大車隊', plan:'Pay著刷 3.8%', group:'台新Pay綁定支付'},
-
-  // 2. 天天刷 3.3%
+  {name:'7-11', plan:'Pay著刷 3.8%', group:'台新/台灣Pay（四大超商）'},
   {name:'7-11', plan:'天天刷 3.3%', group:'超商量販'},
+  {name:'全家便利商店', plan:'Pay著刷 3.8%', group:'台新/台灣Pay（四大超商）'},
   {name:'全家便利商店', plan:'天天刷 3.3%', group:'超商量販'},
+  {name:'IKEA', plan:'Pay著刷 3.8%', group:'台新/台灣Pay場域'},
+  {name:'新光三越', plan:'Pay著刷 3.8%', group:'台新/台灣Pay場域'},
   {name:'家樂福', plan:'天天刷 3.3%', group:'超商量販'},
   {name:'大買家', plan:'天天刷 3.3%', group:'超商量販'},
-  {name:'台鐵', plan:'天天刷 3.3%', group:'通勤交通'},
-  {name:'高鐵', plan:'天天刷 3.3%', group:'通勤交通'},
-  {name:'LINE GO', plan:'天天刷 3.3%', group:'通勤交通'},
-  {name:'Yoxi', plan:'天天刷 3.3%', group:'通勤交通'},
+  {name:'台灣大車隊', plan:'Pay著刷 3.8%', group:'台新/台灣Pay場域'},
+  {name:'麥當勞', plan:'不回饋', group:'官方排除'},
+  {name:'肯德基', plan:'不回饋', group:'官方排除'},
+  {name:'五十嵐', plan:'不回饋', group:'官方排除'},
   {name:'Uber', plan:'天天刷 3.3%', group:'通勤交通'},
-
-  // 3. 大筆刷 3.3%
-  {name:'遠東SOGO', plan:'大筆刷 3.3%', group:'指定百貨'},
-  {name:'微風', plan:'大筆刷 3.3%', group:'指定百貨'},
-  {name:'MITSUI OUTLET PARK', plan:'大筆刷 3.3%', group:'指定Outlet'},
-
-  // 4. 好饗刷 3.3%
-  {name:'全臺餐飲', plan:'好饗刷 3.3%', group:'全臺餐飲'},
-  {name:'Uber Eats', plan:'好饗刷 3.3%', group:'外送平台'},
   {name:'Foodpanda', plan:'好饗刷 3.3%', group:'外送平台'},
-
-  // 5. 數趣刷 3.3%
-  {name:'蝦皮', plan:'數趣刷 3.3%', group:'網購平台'},
+  {name:'Uber Eats', plan:'好饗刷 3.3%', group:'外送平台'},
   {name:'momo', plan:'數趣刷 3.3%', group:'網購平台'},
-
-  // 6. 玩旅刷 3.3%
-  {name:'海外消費', plan:'玩旅刷 3.3%', group:'外幣/境外'},
-  {name:'華航', plan:'玩旅刷 3.3%', group:'航空公司'},
   {name:'Agoda', plan:'玩旅刷 3.3%', group:'訂房旅行'},
-
-  // 7. 假日刷 2%
   {name:'假日通用', plan:'假日刷 2%', group:'節假日不限通路'}
 ];
 
 // 同義詞
 const SYNONYMS = {
   '7-11':['7/11','7ELEVEN','7-ELEVEN','小七'],
-  '全家便利商店':['全家','FamilyMart'],
-  '麥當勞':['McDonald’s','McDonalds'],
-  '肯德基':['KFC','kfc'],
-  '五十嵐':['50嵐'],
-  'CoCo':['COCO','CoCo都可']
+  '全家便利商店':['全家','FamilyMart','Family Mart','Fami'],
+  '台灣大車隊':['55688','台灣大'],
+  '麥當勞':['McDonalds','McD','麥當勞餐廳'],
+  '肯德基':['KFC'],
+  '五十嵐':['50嵐','伍拾嵐'],
+  'Foodpanda':['food panda','外送熊'],
+  'Uber Eats':['ubereats','ubereat']
 };
 
-// 官方排除清單（含速食+手搖飲）
-const NO_BONUS = new Set([
-  '麥當勞','肯德基',
-  '水巷茶弄','五十嵐','50嵐','清心福全','COCO','CoCo都可','迷客夏','茶湯會',
-  '大苑子','再睡5分鐘','茶の魔手','可不可','珍煮丹','麻古茶坊','COMEBUY','清原芋圓',
-  '一芳水果茶','春陽茶事','TEA TOP'
-]);
-const NO_BONUS_NOTE = '官方排除：聯合信用卡中心小額支付收單，不加碼回饋';
+const NO_BONUS = new Set(['麥當勞','肯德基','五十嵐']);
+const NO_BONUS_NOTE = '官方排除，不加碼回饋（假日可用假日刷 2%）';
 
-// 索引建構
-function normalize(str){ return (str||'').toLowerCase().replace(/\s+/g,'').trim(); }
-const INDEX = [];
-for(const item of DATA){
-  const base = { ...item, key: normalize(item.name) };
-  INDEX.push(base);
-  const syns = SYNONYMS[item.name] || [];
-  for(const s of syns){ INDEX.push({...item, name:item.name, alias:s, key:normalize(s)}); }
+// 建立索引
+function normalize(s){return (s||'').toLowerCase().replace(/\s+/g,'').trim();}
+const INDEX=[];
+for(const it of DATA){
+  INDEX.push({...it,key:normalize(it.name)});
+  const syn=SYNONYMS[it.name]||[];
+  for(const s of syn){INDEX.push({...it,key:normalize(s)});}
 }
 
 // 搜尋
-function search(q, isHoliday){
-  const n = normalize(q);
-  const seen = new Set();
-  const out = [];
+function search(q,isHoliday){
+  const n=normalize(q);
+  const out=[], seen=new Set();
   if(!n) return out;
-
   for(const it of INDEX){
-    let score=0, why='';
-    if(n===it.key){score=100;why=`精確命中「${it.alias?it.alias:it.name}」`;}
-    else if(it.key.includes(n)||n.includes(it.key)){score=75;why=`部分相符：${it.name}`;}
-    if(score>0){
-      const sig = it.name+'|'+it.plan;
-      if(!seen.has(sig)){
-        seen.add(sig);
-        if(NO_BONUS.has(it.name) && !isHoliday){
-          out.push({name:it.name, plan:'不回饋', group:'官方排除', score:100, why:`查到 ${it.name} 屬官方排除`, note:NO_BONUS_NOTE});
-        }else if(NO_BONUS.has(it.name) && isHoliday){
-          out.push({name:it.name, plan:'不回饋', group:'官方排除', score:90, why:`平日屬官方排除`, note:NO_BONUS_NOTE});
-          out.push({name:it.name, plan:'假日刷 2%', group:'節假日不限通路', score:85, why:`因是假日，任何通路皆可適用`, note:'含 LINE Pay/街口支付綁定'});
+    if(it.key.includes(n)||n.includes(it.key)){
+      const sig=it.name+'|'+it.plan;
+      if(seen.has(sig)) continue;
+      seen.add(sig);
+
+      if(NO_BONUS.has(it.name)){
+        if(!isHoliday){
+          out.push({name:it.name,plan:'不回饋',group:'官方排除',why:'屬於官方排除',note:NO_BONUS_NOTE});
         }else{
-          out.push({name:it.name, plan:it.plan, group:it.group, score, why, note:it.note||''});
+          out.push({name:it.name,plan:'不回饋',group:'官方排除',why:'平日屬於官方排除',note:NO_BONUS_NOTE});
+          out.push({name:it.name,plan:'假日刷 2%',group:'節假日不限通路',why:'假日不限通路',note:'含 LINE Pay/街口支付綁定'});
         }
+      }else{
+        out.push({...it,why:'命中 '+it.name});
       }
     }
   }
-
   if(isHoliday && out.length===0){
-    out.push({name:q, plan:'假日刷 2%', group:'節假日不限通路', score:60, why:'假日不限通路', note:'含 LINE Pay/街口支付綁定'});
+    out.push({name:q,plan:'假日刷 2%',group:'節假日不限通路',why:'假日不限通路',note:'含 LINE Pay/街口支付綁定'});
   }
-
   return out;
 }
 
@@ -164,14 +150,16 @@ function search(q, isHoliday){
 function render(list){
   const box=document.getElementById('results');
   box.innerHTML='';
-  if(list.length===0){box.innerHTML='<div class="result"><span class="muted">沒有找到對應</span></div>';return;}
+  if(list.length===0){
+    box.innerHTML='<div class="result"><span class="muted">沒有找到，試試：店名（IKEA）、情境（加油/訂房/外送）。</span></div>';
+    return;
+  }
   for(const r of list){
     const el=document.createElement('div');
     el.className='result';
-    el.innerHTML=`<div><span class="plan ${/不回饋/.test(r.plan)?'nobonus':''}">${r.plan}</span>
-    <span class="score">置信分數：${r.score}</span></div>
-    <div class="why">理由：${r.why}；${r.group!=='官方排除'?`歸類為「${r.group}」。`:''}${r.note? '（'+r.note+'）':''}</div>
-    <div class="badge">關鍵：${r.name}</div>`;
+    el.innerHTML=`<div><span class="plan ${/不回饋/.test(r.plan)?'nobonus':''}">${r.plan}</span></div>
+      <div class="why">理由：${r.why}；${r.group}${r.note? '（'+r.note+'）':''}</div>
+      <div class="badge">關鍵：${r.name}</div>`;
     box.appendChild(el);
   }
 }
