@@ -366,7 +366,7 @@ function render(list){
     el.className='result';
     el.innerHTML =
       `<div><span class="plan ${/不回饋/.test(r.plan)?'nobonus':''}">${r.plan}</span>
-         <span class="score">置信分數：${r.score}</span></div>
+         <span class="score">匹配分數：${r.score}</span></div>
        <div class="why">理由：${r.reason}；歸類為「${r.group}」。</div>
        <div class="badge">關鍵：${r.name}</div>`;
     box.appendChild(el);
@@ -388,3 +388,4 @@ $q.addEventListener('keydown', e=>{
 </script>
 </body>
 </html>
+
